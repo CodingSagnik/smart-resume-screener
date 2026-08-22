@@ -6,6 +6,40 @@ from app.schemas.job import JobDescriptionResponse
 from app.schemas.resume import ResumeResponse
 
 
+class LLMScreeningEvaluation(BaseModel):
+    """Structured LLM output for resume vs job description screening."""
+    skills_match_score: int = Field(
+        ...,
+        ge=1,
+        le=10,
+        description="Rating from 1 to 10 assessing technical and domain skills fit.",
+    )
+    experience_match_score: int = Field(
+        ...,
+        ge=1,
+        le=10,
+        description="Rating from 1 to 10 assessing years of experience and seniority.",
+    )
+    overall_score: int = Field(
+        ...,
+        ge=1,
+        le=10,
+        description="Holistic candidate-job match rating from 1 to 10.",
+    )
+    matched_skills: List[str] = Field(
+        default_factory=list,
+        description="List of required/preferred skills present in the resume.",
+    )
+    missing_skills: List[str] = Field(
+        default_factory=list,
+        description="List of required skills missing from the resume.",
+    )
+    justification: str = Field(
+        ...,
+        description="Detailed paragraph justifying the evaluation ratings.",
+    )
+
+
 class ScreeningResultBase(BaseModel):
     job_id: int
     resume_id: int

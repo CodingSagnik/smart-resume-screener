@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Resume Screener | AI-Powered Blind Candidate Screening</title>
+  <meta name="description" content="Production-ready Smart Resume Screener powered by Google Gemini 1.5 Flash and FastAPI. Bias-free semantic resume parsing and candidate ranking.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Background Glow & Decorative Elements -->
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+  <div class="bg-glow bg-glow-3"></div>
+
+  <!-- Main Navigation Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-wrapper">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <path d="M12 18v-4"/>
+            <path d="m9 15 3-3 3 3"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">SmartScreen<span class="brand-accent">.AI</span></span>
+          <span class="brand-tag">ATS Intelligence</span>
+        </div>
+      </div>
+
+      <nav class="nav-links">
+        <button class="nav-btn active" data-tab="screener-tab">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+            <line x1="12" y1="22.08" x2="12" y2="12"/>
+          </svg>
+          Quick Screener
+        </button>
+        <button class="nav-btn" data-tab="pipeline-tab">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          Candidate Pipeline
+        </button>
+        <a href="/api/v1/docs" target="_blank" class="nav-btn api-docs-link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+            <path d="M6 6h10"/>
+            <path d="M6 10h10"/>
+          </svg>
+          OpenAPI Docs
+        </a>
+      </nav>
+
+      <div class="header-status">
+        <div class="engine-badge">
+          <span class="pulse-dot"></span>
+          <span class="engine-name">Gemini 1.5 Flash</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-content">
+    <!-- SECTION 1: SCREENER TAB -->
+    <section id="screener-tab" class="tab-content active">
+      <div class="hero-header">
+        <div class="hero-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          Bias-Free Blind Screening Engine
+        </div>
+        <h1 class="hero-title">AI Semantic Resume Screener</h1>
+        <p class="hero-subtitle">Upload candidate resumes and match them against your job descriptions. Our AI anonymizes PII and performs deep semantic scoring using Google Gemini.</p>
+      </div>
+
+      <div class="screener-grid">
+        <!-- LEFT COLUMN: Input Form -->
+        <div class="panel-card form-panel">
+          <div class="panel-header">
+            <div class="panel-title-wrapper">
+              <div class="panel-icon form-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </div>
+              <div>
+                <h2 class="panel-title">Screening Inputs</h2>
+                <p class="panel-desc">Paste job requirements and upload candidate document</p>
+              </div>
+            </div>
+
+            <!-- Preset Samples Dropdown -->
+            <div class="presets-dropdown">
+              <button type="button" id="preset-toggle-btn" class="btn-preset">
+                <span>⚡ Load Sample Role</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="m6 9 6 6 6-6"/>
+                </svg>
+              </button>
+              <div id="presets-menu" class="presets-menu hidden">
+                <div class="preset-item" data-preset="backend">
+                  <strong>Senior Python/FastAPI Engineer</strong>
+                  <span>FastAPI, PostgreSQL, Docker, AsyncIO</span>
+                </div>
+                <div class="preset-item" data-preset="frontend">
+                  <strong>Senior Frontend / React Architect</strong>
+                  <span>React, TypeScript, Next.js, State Management</span>
+                </div>
+                <div class="preset-item" data-preset="ai">
+                  <strong>AI / Machine Learning Engineer</strong>
+                  <span>PyTorch, LLMs, Vector DBs, LangChain, Python</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <form id="screening-form" class="screening-form">
+            <!-- Target Role / Title -->
+            <div class="form-group">
+              <label for="job-title" class="form-label">
+                Target Role Title <span class="required">*</span>
+              </label>
+              <input type="text" id="job-title" class="form-input" placeholder="e.g. Senior Backend Engineer" required value="Senior Python & FastAPI Engineer">
+            </div>
+
+            <!-- Job Description -->
+            <div class="form-group">
+              <div class="label-row">
+                <label for="job-description" class="form-label">
+                  Job Description Requirements <span class="required">*</span>
+                </label>
+                <button type="button" id="clear-jd-btn" class="text-link">Clear</button>
+              </div>
+              <textarea id="job-description" class="form-textarea" rows="6" placeholder="Paste the job description, core responsibilities, required technical skills, and experience criteria..." required></textarea>
+            </div>
+
+            <!-- Candidate Metadata (Optional) -->
+            <div class="form-row-2">
+              <div class="form-group">
+                <label for="candidate-name" class="form-label">Candidate Name</label>
+                <input type="text" id="candidate-name" class="form-input" placeholder="e.g. Alex Morgan" value="Alex Morgan">
+              </div>
+              <div class="form-group">
+                <label for="candidate-email" class="form-label">Candidate Email</label>
+                <input type="email" id="candidate-email" class="form-input" placeholder="e.g. alex@example.com">
+              </div>
+            </div>
+
+            <!-- Resume Upload Zone -->
+            <div class="form-group">
+              <div class="label-row">
+                <label class="form-label">
+                  Candidate Resume (PDF, TXT, DOCX) <span class="required">*</span>
+                </label>
+                <button type="button" id="sample-resume-btn" class="text-link accent-link">
+                  📄 Insert Sample Resume
+                </button>
+              </div>
+
+              <div id="dropzone" class="dropzone">
+                <input type="file" id="resume-file" class="file-input" accept=".pdf,.txt,.docx,.doc">
+                <div class="dropzone-content">
+                  <div class="upload-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="17 8 12 3 7 8"/>
+                      <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                  </div>
+                  <div class="upload-text">
+                    <span class="primary-text">Drag & drop resume file here, or <span class="browse-link">browse</span></span>
+                    <span class="secondary-text">Supported formats: PDF, TXT, DOCX (Max 10MB)</span>
+                  </div>
+                </div>
+
+                <!-- Selected File Pill -->
+                <div id="selected-file-info" class="selected-file-info hidden">
+                  <div class="file-badge-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                      <polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                  </div>
+                  <div class="file-details">
+                    <span id="file-name" class="file-name">resume.pdf</span>
+                    <span id="file-size" class="file-size">142 KB</span>
+                  </div>
+                  <button type="button" id="remove-file-btn" class="btn-icon-danger" title="Remove file">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" id="submit-screen-btn" class="btn-primary btn-submit">
+              <span class="btn-icon-wrapper">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                </svg>
+              </span>
+              <span class="btn-text">Run Gemini AI Screening</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- RIGHT COLUMN: Screening Results -->
+        <div class="panel-card results-panel">
+          <div class="panel-header">
+            <div class="panel-title-wrapper">
+              <div class="panel-icon results-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              </div>
+              <div>
+                <h2 class="panel-title">Evaluation Insights</h2>
+                <p class="panel-desc">Semantic fit rating, skill gaps & AI justification</p>
+              </div>
+            </div>
+
+            <div id="result-status-badge" class="status-badge-container hidden">
+              <span class="status-pill status-shortlisted">SHORTLISTED</span>
+            </div>
+          </div>
+
+          <!-- 1. EMPTY PLACEHOLDER STATE -->
+          <div id="results-empty" class="results-state empty-state">
+            <div class="empty-illustration">
+              <div class="pulse-ring"></div>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="4" width="18" height="16" rx="2"/>
+                <line x1="7" y1="8" x2="17" y2="8"/>
+                <line x1="7" y1="12" x2="17" y2="12"/>
+                <line x1="7" y1="16" x2="13" y2="16"/>
+              </svg>
+            </div>
+            <h3 class="state-title">Awaiting Candidate Evaluation</h3>
+            <p class="state-desc">Input a job description and attach a candidate's resume on the left. The system will redact PII and evaluate fit with Google Gemini.</p>
+            <div class="feature-bullets">
+              <div class="bullet-item">
+                <span class="bullet-dot green"></span>
+                <span>Automated PII Redaction</span>
+              </div>
+              <div class="bullet-item">
+                <span class="bullet-dot blue"></span>
+                <span>Semantic 1-10 Scoring</span>
+              </div>
+              <div class="bullet-item">
+                <span class="bullet-dot purple"></span>
+                <span>Skill Gap Analysis</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. LOADING STATE -->
+          <div id="results-loading" class="results-state loading-state hidden">
+            <div class="ai-loader-container">
+              <div class="ai-loader-spinner"></div>
+              <div class="ai-loader-core">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                </svg>
+              </div>
+            </div>
+            <h3 class="state-title">Analyzing Resume with Gemini AI</h3>
+            <p id="loading-step-text" class="state-desc">Extracting document text and redacting contact PII...</p>
+
+            <div class="loading-steps-list">
+              <div class="step-row active" id="step-1">
+                <div class="step-indicator"></div>
+                <span>1. Parsing document text (pdfplumber/pypdf)</span>
+              </div>
+              <div class="step-row" id="step-2">
+                <div class="step-indicator"></div>
+                <span>2. Redacting PII (Name, Email, Phone, URLs)</span>
+              </div>
+              <div class="step-row" id="step-3">
+                <div class="step-indicator"></div>
+                <span>3. Calling Google Gemini 1.5 Flash API</span>
+              </div>
+              <div class="step-row" id="step-4">
+                <div class="step-indicator"></div>
+                <span>4. Calculating semantic fit & skill gaps</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. SUCCESS RESULTS VIEW -->
+          <div id="results-content" class="results-state content-state hidden">
+            <!-- Candidate Summary Bar -->
+            <div class="candidate-summary-bar">
+              <div class="candidate-meta">
+                <div class="candidate-avatar">
+                  <span id="candidate-initials">AM</span>
+                </div>
+                <div>
+                  <h3 id="res-candidate-name" class="candidate-name">Alex Morgan</h3>
+                  <p id="res-job-title" class="target-title">Senior Python & FastAPI Engineer</p>
+                </div>
+              </div>
+              <div class="decision-pill" id="decision-badge">
+                <span class="dot"></span>
+                <span id="decision-text">Shortlisted Candidate</span>
+              </div>
+            </div>
+
+            <!-- Scores Grid Card -->
+            <div class="scores-grid">
+              <!-- Overall Score Dial -->
+              <div class="score-card overall-card">
+                <span class="score-label">Overall Match Fit</span>
+                <div class="radial-progress-wrapper">
+                  <svg class="radial-progress" viewBox="0 0 100 100">
+                    <circle class="progress-bg" cx="50" cy="50" r="42"/>
+                    <circle id="radial-progress-bar" class="progress-bar" cx="50" cy="50" r="42"/>
+                  </svg>
+                  <div class="radial-value-container">
+                    <span id="score-overall-num" class="radial-number">8</span>
+                    <span class="radial-max">/ 10</span>
+                  </div>
+                </div>
+                <span id="score-tier-label" class="score-tier-badge tier-high">High Alignment</span>
+              </div>
+
+              <!-- Sub-Scores Column -->
+              <div class="sub-scores-column">
+                <!-- Skills Score -->
+                <div class="score-card sub-card">
+                  <div class="sub-score-header">
+                    <span class="score-label">Skills Alignment</span>
+                    <span id="score-skills-val" class="score-val">9 / 10</span>
+                  </div>
+                  <div class="linear-progress-track">
+                    <div id="progress-skills-bar" class="linear-progress-fill fill-green" style="width: 90%;"></div>
+                  </div>
+                  <span class="sub-score-hint">Technical stack & domain overlap</span>
+                </div>
+
+                <!-- Experience Score -->
+                <div class="score-card sub-card">
+                  <div class="sub-score-header">
+                    <span class="score-label">Experience & Seniority</span>
+                    <span id="score-exp-val" class="score-val">8 / 10</span>
+                  </div>
+                  <div class="linear-progress-track">
+                    <div id="progress-exp-bar" class="linear-progress-fill fill-indigo" style="width: 80%;"></div>
+                  </div>
+                  <span class="sub-score-hint">Career tenure & project scope</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Match Highlights Section -->
+            <div class="section-card match-highlights-section">
+              <div class="section-header">
+                <div class="section-title-wrapper">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                  <h4 class="section-heading">Match Highlights & Skill Gaps</h4>
+                </div>
+              </div>
+
+              <div class="skills-breakdown-grid">
+                <!-- Matched Skills (Green Badges) -->
+                <div class="skill-category-box matched-box">
+                  <div class="cat-header">
+                    <span class="cat-icon green-icon">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    </span>
+                    <span class="cat-title">Matched Skills</span>
+                    <span id="matched-count-badge" class="count-pill green-pill">0</span>
+                  </div>
+                  <div id="matched-skills-container" class="tags-container">
+                    <!-- Dynamic Green Badges -->
+                  </div>
+                </div>
+
+                <!-- Missing Skills (Red Badges) -->
+                <div class="skill-category-box missing-box">
+                  <div class="cat-header">
+                    <span class="cat-icon red-icon">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </span>
+                    <span class="cat-title">Missing / Gap Skills</span>
+                    <span id="missing-count-badge" class="count-pill red-pill">0</span>
+                  </div>
+                  <div id="missing-skills-container" class="tags-container">
+                    <!-- Dynamic Red Badges -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Analysis Summary & Justification -->
+            <div class="section-card justification-section">
+              <div class="section-header">
+                <div class="section-title-wrapper">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  <h4 class="section-heading">AI Recruiter Justification</h4>
+                </div>
+                <button type="button" id="copy-summary-btn" class="btn-tiny" title="Copy text">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                  <span>Copy</span>
+                </button>
+              </div>
+              <div class="justification-body">
+                <p id="res-justification-text" class="justification-paragraph">
+                  Evaluation justification loading...
+                </p>
+              </div>
+            </div>
+
+            <!-- Action Buttons Footer -->
+            <div class="results-actions-footer">
+              <button type="button" id="download-json-btn" class="btn-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Export JSON Report
+              </button>
+              <button type="button" id="screen-another-btn" class="btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                  <path d="M21 3v5h-5"/>
+                  <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                  <path d="M8 16H3v5"/>
+                </svg>
+                Screen Another Resume
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: CANDIDATE PIPELINE TAB -->
+    <section id="pipeline-tab" class="tab-content">
+      <div class="pipeline-header">
+        <div>
+          <h2 class="section-title">Candidate Pipeline & Shortlists</h2>
+          <p class="section-subtitle">Overview of candidates screened and ranked across job postings.</p>
+        </div>
+        <button type="button" id="refresh-pipeline-btn" class="btn-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+          Refresh List
+        </button>
+      </div>
+
+      <div class="panel-card pipeline-card">
+        <div class="table-responsive">
+          <table class="pipeline-table">
+            <thead>
+              <tr>
+                <th>Candidate</th>
+                <th>Target Role</th>
+                <th>Overall Match</th>
+                <th>Skills Score</th>
+                <th>Status</th>
+                <th>Screened Date</th>
+              </tr>
+            </thead>
+            <tbody id="pipeline-tbody">
+              <tr>
+                <td colspan="6" class="table-empty-cell">No candidates screened yet. Run a screening evaluation to populate the pipeline.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

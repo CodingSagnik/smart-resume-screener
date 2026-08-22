@@ -183,8 +183,23 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 docker-compose up --build -d
 ```
 
-### 3. Interactive Documentation
+### 3. Interactive UI & Documentation
 Once started, open your browser to:
+- **Frontend AI Screener Dashboard**: [http://localhost:8000/](http://localhost:8000/)
 - **Interactive Swagger UI**: [http://localhost:8000/api/v1/docs](http://localhost:8000/api/v1/docs)
 - **ReDoc Alternative UI**: [http://localhost:8000/api/v1/redoc](http://localhost:8000/api/v1/redoc)
 - **Health Check**: [http://localhost:8000/health](http://localhost:8000/health)
+
+---
+
+## 💻 Frontend Dashboard Highlights
+
+The frontend (`frontend/index.html`, `frontend/css/style.css`, `frontend/js/app.js`) features:
+1. **Interactive Job & Resume Form**: Paste job description, drag & drop resumes (PDF/TXT/DOCX), with 1-click role presets ("Senior Python", "React Architect", "AI Engineer") and sample resume generator.
+2. **Smooth Multi-Step Loader**: Visual progress indicator reflecting text extraction, bias-free PII redaction, and Gemini 1.5 Flash evaluation.
+3. **Animated Visual Scores**: Circular radial fit gauge (1-10 / 0-100%) and linear bars for Skills & Experience ratings.
+4. **Match Highlights**:
+   - `matched_skills` displayed as vibrant green checkmark badges (`+`).
+   - `missing_skills` displayed as red/rose warning badges (`-`).
+5. **AI Recruiter Justification**: Clear analytical paragraph explaining candidate evaluation and decision.
+6. **Candidate Pipeline Table**: Track shortlisted vs screened candidates with exportable JSON reports.

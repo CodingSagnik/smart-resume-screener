@@ -35,6 +35,7 @@ from app.schemas.screening_result import (
     ScreeningResultUpdate,
     ScreeningResultResponse,
     BatchScreeningRequest,
+    LLMScreeningEvaluation,
 )
 
 __all__ = [
@@ -66,4 +67,5 @@ __all__ = [
     "ScreeningResultUpdate",
     "ScreeningResultResponse",
     "BatchScreeningRequest",
+    "LLMScreeningEvaluation",
 ]
