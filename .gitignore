@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Database & Storage
+*.db
+*.sqlite3
+uploads/
+postgres_data/
+
+# Environment & IDE
+.env
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Alembic
+alembic/versions/*.pyc
