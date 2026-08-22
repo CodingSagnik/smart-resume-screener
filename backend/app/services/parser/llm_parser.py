@@ -117,17 +117,18 @@ async def _parse_with_gemini(anonymized_text: str) -> Dict[str, Any]:
 
 
 async def _parse_with_openai(anonymized_text: str) -> Dict[str, Any]:
-    """Call OpenAI API using the official async client with JSON mode."""
+    """Call OpenAI / OpenRouter API using the official AsyncOpenAI client with JSON mode."""
     api_key = settings.OPENAI_API_KEY
     if not api_key:
         raise ValueError("OPENAI_API_KEY is not configured in environment variables.")
 
-    model_name = settings.OPENAI_MODEL or "gpt-4o-mini"
+    model_name = settings.OPENAI_MODEL or "openrouter/free"
+    base_url = settings.OPENAI_BASE_URL or "https://openrouter.ai/api/v1"
 
     try:
         from openai import AsyncOpenAI
 
-        client = AsyncOpenAI(api_key=api_key)
+        client = AsyncOpenAI(api_key=api_key, base_url=base_url)
         response = await client.chat.completions.create(
             model=model_name,
             messages=[
@@ -143,8 +144,8 @@ async def _parse_with_openai(anonymized_text: str) -> Dict[str, Any]:
         content = response.choices[0].message.content
         return json.loads(_clean_json_response(content))
     except Exception as e:
-        logger.error(f"OpenAI API call failed: {e}")
-        raise ValueError(f"OpenAI API parsing failed: {str(e)}")
+        logger.error(f"OpenAI/OpenRouter API call failed: {e}")
+        raise ValueError(f"OpenAI/OpenRouter API parsing failed: {str(e)}")
 
 
 def _dev_mock_parser(anonymized_text: str) -> Dict[str, Any]:
@@ -202,39 +203,38 @@ def _dev_mock_parser(anonymized_text: str) -> Dict[str, Any]:
 
 async def parse_resume_with_llm(anonymized_text: str) -> ResumeParsedData:
     """
-    Send anonymized resume text to configured Cloud LLM (Gemini / OpenAI)
+    Send anonymized resume text to configured Cloud LLM (OpenRouter / OpenAI / Gemini)
     and parse into validated Pydantic ResumeParsedData schema.
     """
     if not anonymized_text or not anonymized_text.strip():
         raise ValueError("Resume text is empty. Cannot perform LLM extraction.")
 
-    provider = (settings.LLM_PROVIDER or "gemini").lower()
+    provider = (settings.LLM_PROVIDER or "openai").lower()
     raw_data: Optional[Dict[str, Any]] = None
 
-    # Check if provider keys are configured
-    if provider == "gemini" and settings.GEMINI_API_KEY:
-        try:
-            raw_data = await _parse_with_gemini(anonymized_text)
-        except Exception as e:
-            logger.warning(f"Gemini API error ({e}). Falling back to heuristic parser for continuity.")
-            raw_data = _dev_mock_parser(anonymized_text)
-    elif provider == "openai" and settings.OPENAI_API_KEY:
+    if provider == "openai" and settings.OPENAI_API_KEY:
         try:
             raw_data = await _parse_with_openai(anonymized_text)
         except Exception as e:
-            logger.warning(f"OpenAI API error ({e}). Falling back to heuristic parser for continuity.")
+            logger.warning(f"OpenAI/OpenRouter API error ({e}). Using heuristic parser.")
             raw_data = _dev_mock_parser(anonymized_text)
-    elif settings.GEMINI_API_KEY:
+    elif provider == "gemini" and settings.GEMINI_API_KEY:
         try:
             raw_data = await _parse_with_gemini(anonymized_text)
         except Exception as e:
-            logger.warning(f"Gemini API error ({e}). Falling back to heuristic parser.")
+            logger.warning(f"Gemini API error ({e}). Using heuristic parser.")
             raw_data = _dev_mock_parser(anonymized_text)
     elif settings.OPENAI_API_KEY:
         try:
             raw_data = await _parse_with_openai(anonymized_text)
         except Exception as e:
-            logger.warning(f"OpenAI API error ({e}). Falling back to heuristic parser.")
+            logger.warning(f"OpenAI/OpenRouter API error ({e}). Using heuristic parser.")
+            raw_data = _dev_mock_parser(anonymized_text)
+    elif settings.GEMINI_API_KEY:
+        try:
+            raw_data = await _parse_with_gemini(anonymized_text)
+        except Exception as e:
+            logger.warning(f"Gemini API error ({e}). Using heuristic parser.")
             raw_data = _dev_mock_parser(anonymized_text)
     else:
         # Development fallback mode

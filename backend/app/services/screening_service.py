@@ -98,6 +98,93 @@ def _dev_mock_screening(
     }
 
 
+async def compare_resume_and_job_with_openai(
+    parsed_resume_dict: Dict[str, Any],
+    job_description_raw: str,
+    job_title: str = "",
+    required_skills: Optional[List[str]] = None,
+    preferred_skills: Optional[List[str]] = None,
+    experience_level: Optional[str] = None,
+    min_years_experience: Optional[int] = None,
+) -> LLMScreeningEvaluation:
+    """
+    Send parsed resume JSON and raw job description to OpenAI / OpenRouter
+    using AsyncOpenAI with structured JSON mode.
+    """
+    api_key = settings.OPENAI_API_KEY
+    req_skills = required_skills or []
+    pref_skills = preferred_skills or []
+
+    if not api_key:
+        raw_output = _dev_mock_screening(
+            resume_skills=parsed_resume_dict.get("skills", []),
+            job_description_raw=job_description_raw,
+            required_skills=req_skills,
+        )
+        return LLMScreeningEvaluation.model_validate(raw_output)
+
+    model_name = settings.OPENAI_MODEL or "openrouter/free"
+    base_url = settings.OPENAI_BASE_URL or "https://openrouter.ai/api/v1"
+
+    job_context = f"""=== TARGET JOB DESCRIPTION ===
+Title: {job_title}
+Experience Level: {experience_level or 'Not specified'}
+Minimum Years Experience Required: {min_years_experience or 0}
+Required Skills: {', '.join(req_skills) if req_skills else 'See description'}
+Preferred Skills: {', '.join(pref_skills) if pref_skills else 'None specified'}
+
+Job Details:
+{job_description_raw}
+"""
+
+    resume_context = f"""=== CANDIDATE RESUME (ANONYMIZED) ===
+Summary:
+{parsed_resume_dict.get('summary') or 'N/A'}
+
+Extracted Skills:
+{', '.join(parsed_resume_dict.get('skills', []))}
+
+Work Experience History:
+{json.dumps(parsed_resume_dict.get('work_experiences', []), indent=2)}
+
+Education:
+{json.dumps(parsed_resume_dict.get('education', []), indent=2)}
+
+Certifications:
+{json.dumps(parsed_resume_dict.get('certifications', []), indent=2)}
+"""
+
+    prompt = f"{job_context}\n\n{resume_context}"
+
+    try:
+        from openai import AsyncOpenAI
+
+        client = AsyncOpenAI(api_key=api_key, base_url=base_url)
+        response = await client.chat.completions.create(
+            model=model_name,
+            messages=[
+                {"role": "system", "content": SCREENING_SYSTEM_PROMPT},
+                {"role": "user", "content": prompt},
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.2,
+        )
+        content = response.choices[0].message.content
+        clean_text = _clean_json_text(content)
+        result_dict = json.loads(clean_text)
+        return LLMScreeningEvaluation.model_validate(result_dict)
+    except Exception as e:
+        logger.warning(
+            f"OpenAI/OpenRouter API screening evaluation failed: {e}. Running fallback heuristic evaluation."
+        )
+        raw_output = _dev_mock_screening(
+            resume_skills=parsed_resume_dict.get("skills", []),
+            job_description_raw=job_description_raw,
+            required_skills=req_skills,
+        )
+        return LLMScreeningEvaluation.model_validate(raw_output)
+
+
 async def compare_resume_and_job_with_gemini(
     parsed_resume_dict: Dict[str, Any],
     job_description_raw: str,
@@ -116,7 +203,6 @@ async def compare_resume_and_job_with_gemini(
     req_skills = required_skills or []
     pref_skills = preferred_skills or []
 
-    # Build evaluation prompt context
     job_context = f"""=== TARGET JOB DESCRIPTION ===
 Title: {job_title}
 Experience Level: {experience_level or 'Not specified'}
@@ -155,7 +241,6 @@ Certifications:
         )
         return LLMScreeningEvaluation.model_validate(raw_output)
 
-    # 1. Try modern google-genai SDK
     try:
         from google import genai
         from google.genai import types
@@ -172,33 +257,75 @@ Certifications:
         clean_text = _clean_json_text(response.text)
         result_dict = json.loads(clean_text)
         return LLMScreeningEvaluation.model_validate(result_dict)
-    except (ImportError, AttributeError):
-        pass
     except Exception as e:
-        logger.warning(f"google-genai SDK failed: {e}. Trying google.generativeai fallback...")
-
-    # 2. Fallback to google.generativeai SDK
-    try:
-        import google.generativeai as gai
-
-        gai.configure(api_key=api_key)
-        model = gai.GenerativeModel(
-            model_name=model_name,
-            generation_config={
-                "response_mime_type": "application/json",
-                "temperature": 0.2,
-            },
+        logger.warning(
+            f"Gemini API screening evaluation failed: {e}. Running fallback heuristic evaluation."
         )
-        response = model.generate_content(prompt)
-        clean_text = _clean_json_text(response.text)
-        result_dict = json.loads(clean_text)
-        return LLMScreeningEvaluation.model_validate(result_dict)
-    except Exception as e:
-        logger.warning(f"Gemini API screening evaluation encountered error: {e}. Running fallback heuristic evaluation.")
         raw_output = _dev_mock_screening(
             resume_skills=parsed_resume_dict.get("skills", []),
             job_description_raw=job_description_raw,
             required_skills=req_skills,
+        )
+        return LLMScreeningEvaluation.model_validate(raw_output)
+
+
+async def evaluate_screening_with_llm(
+    parsed_resume_dict: Dict[str, Any],
+    job_description_raw: str,
+    job_title: str = "",
+    required_skills: Optional[List[str]] = None,
+    preferred_skills: Optional[List[str]] = None,
+    experience_level: Optional[str] = None,
+    min_years_experience: Optional[int] = None,
+) -> LLMScreeningEvaluation:
+    """Route screening evaluation to configured LLM provider (OpenRouter/OpenAI or Gemini)."""
+    provider = (settings.LLM_PROVIDER or "openai").lower()
+    
+    if provider == "openai" and settings.OPENAI_API_KEY:
+        return await compare_resume_and_job_with_openai(
+            parsed_resume_dict=parsed_resume_dict,
+            job_description_raw=job_description_raw,
+            job_title=job_title,
+            required_skills=required_skills,
+            preferred_skills=preferred_skills,
+            experience_level=experience_level,
+            min_years_experience=min_years_experience,
+        )
+    elif provider == "gemini" and settings.GEMINI_API_KEY:
+        return await compare_resume_and_job_with_gemini(
+            parsed_resume_dict=parsed_resume_dict,
+            job_description_raw=job_description_raw,
+            job_title=job_title,
+            required_skills=required_skills,
+            preferred_skills=preferred_skills,
+            experience_level=experience_level,
+            min_years_experience=min_years_experience,
+        )
+    elif settings.OPENAI_API_KEY:
+        return await compare_resume_and_job_with_openai(
+            parsed_resume_dict=parsed_resume_dict,
+            job_description_raw=job_description_raw,
+            job_title=job_title,
+            required_skills=required_skills,
+            preferred_skills=preferred_skills,
+            experience_level=experience_level,
+            min_years_experience=min_years_experience,
+        )
+    elif settings.GEMINI_API_KEY:
+        return await compare_resume_and_job_with_gemini(
+            parsed_resume_dict=parsed_resume_dict,
+            job_description_raw=job_description_raw,
+            job_title=job_title,
+            required_skills=required_skills,
+            preferred_skills=preferred_skills,
+            experience_level=experience_level,
+            min_years_experience=min_years_experience,
+        )
+    else:
+        raw_output = _dev_mock_screening(
+            resume_skills=parsed_resume_dict.get("skills", []),
+            job_description_raw=job_description_raw,
+            required_skills=required_skills or [],
         )
         return LLMScreeningEvaluation.model_validate(raw_output)
 
@@ -243,8 +370,8 @@ class ScreeningService:
             "languages": resume.languages or [],
         }
 
-        # 5. Call Gemini Matching Engine
-        evaluation: LLMScreeningEvaluation = await compare_resume_and_job_with_gemini(
+        # 5. Call LLM Matching Engine (OpenRouter/OpenAI or Gemini)
+        evaluation: LLMScreeningEvaluation = await evaluate_screening_with_llm(
             parsed_resume_dict=parsed_resume_dict,
             job_description_raw=job.description_raw,
             job_title=job.title,
@@ -269,11 +396,12 @@ class ScreeningService:
             else ScreeningStatus.SCREENED
         )
 
+        active_model = settings.OPENAI_MODEL if (settings.LLM_PROVIDER or "").lower() == "openai" else settings.GEMINI_MODEL
         detailed_feedback = {
             "overall_score_1_to_10": evaluation.overall_score,
             "skills_match_score_1_to_10": evaluation.skills_match_score,
             "experience_match_score_1_to_10": evaluation.experience_match_score,
-            "model_used": settings.GEMINI_MODEL or "gemini-1.5-flash",
+            "model_used": active_model or "openrouter/free",
             "justification": evaluation.justification,
         }
 

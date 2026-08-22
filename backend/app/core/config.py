@@ -40,12 +40,13 @@ class Settings(BaseSettings):
     MAX_UPLOAD_SIZE_MB: int = 10
     ALLOWED_EXTENSIONS: List[str] = ["pdf", "docx", "doc", "txt"]
 
-    # LLM Settings (Gemini / OpenAI)
-    LLM_PROVIDER: str = "gemini"  # "gemini" or "openai"
+    # LLM Settings (Gemini / OpenAI / OpenRouter)
+    LLM_PROVIDER: str = "openai"  # "openai" or "gemini"
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-1.5-flash"
     OPENAI_API_KEY: str = ""
-    OPENAI_MODEL: str = "gpt-4o-mini"
+    OPENAI_MODEL: str = "openrouter/free"
+    OPENAI_BASE_URL: str = "https://openrouter.ai/api/v1"
 
     model_config = SettingsConfigDict(
         env_file=".env",
