@@ -60,8 +60,8 @@ def create_application() -> FastAPI:
     app.include_router(api_router, prefix=settings.API_V1_STR)
 
     # Mount Frontend Dashboard Static Assets & Home Route
+    from fastapi.responses import HTMLResponse, Response
     from fastapi.staticfiles import StaticFiles
-    from fastapi.responses import FileResponse
 
     frontend_candidates = [
         os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend")),
@@ -74,17 +74,30 @@ def create_application() -> FastAPI:
     if frontend_dir:
         css_dir = os.path.join(frontend_dir, "css")
         js_dir = os.path.join(frontend_dir, "js")
-        if os.path.exists(css_dir):
-            app.mount("/css", StaticFiles(directory=css_dir), name="css")
-        if os.path.exists(js_dir):
-            app.mount("/js", StaticFiles(directory=js_dir), name="js")
 
-        @app.get("/", tags=["Frontend Dashboard"], include_in_schema=False)
+        @app.get("/css/{filename}", include_in_schema=False)
+        async def get_css(filename: str):
+            filepath = os.path.join(css_dir, filename)
+            if os.path.exists(filepath):
+                with open(filepath, "r", encoding="utf-8") as f:
+                    return Response(content=f.read(), media_type="text/css")
+            return Response(status_code=404)
+
+        @app.get("/js/{filename}", include_in_schema=False)
+        async def get_js(filename: str):
+            filepath = os.path.join(js_dir, filename)
+            if os.path.exists(filepath):
+                with open(filepath, "r", encoding="utf-8") as f:
+                    return Response(content=f.read(), media_type="application/javascript")
+            return Response(status_code=404)
+
+        @app.get("/", tags=["Frontend Dashboard"], include_in_schema=False, response_class=HTMLResponse)
         async def serve_dashboard():
             index_path = os.path.join(frontend_dir, "index.html")
             if os.path.exists(index_path):
-                return FileResponse(index_path)
-            return {"message": "Welcome to Smart Resume Screener API", "docs": f"{settings.API_V1_STR}/docs"}
+                with open(index_path, "r", encoding="utf-8") as f:
+                    return HTMLResponse(content=f.read())
+            return HTMLResponse(content="<h1>Smart Resume Screener API</h1><p>Visit <a href='/api/v1/docs'>/api/v1/docs</a></p>")
 
     return app
 
