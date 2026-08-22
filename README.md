@@ -1,205 +1,312 @@
-# Smart Resume Screener - Backend
+# Smart Resume Screener (AI-Powered ATS & Blind Screening Engine)
 
-A production-grade, modular backend API for the **Smart Resume Screener** platform built with **Python 3**, **FastAPI**, **SQLAlchemy 2.0 (Async)**, and **PostgreSQL** (with SQLite fallback for instant zero-dependency local development).
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg)](https://fastapi.tiangolo.com)
+[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-1.5%20Flash-4285F4.svg)](https://ai.google.dev/)
+[![SQLAlchemy 2.0](https://img.shields.io/badge/SQLAlchemy-2.0%20Async-D71F00.svg)](https://www.sqlalchemy.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+**Author:** Sagnik Ray  
+**Repository:** [https://github.com/CodingSagnik/smart-resume-screener.git](https://github.com/CodingSagnik/smart-resume-screener.git)
 
 ---
 
-## 📁 Project Architecture
+## 📌 Executive Overview
 
+The **Smart Resume Screener** is an intelligent, bias-free applicant tracking and candidate screening system. It automates the extraction, redaction, and semantic matching of resumes against complex job descriptions using **FastAPI**, **SQLAlchemy 2.0 Async**, and **Google Gemini 1.5 Flash**.
+
+To eliminate unconscious hiring bias, the platform implements an automated Personally Identifiable Information (PII) redaction layer (removing names, email addresses, phone numbers, and portfolio links) before transmitting data to the language model. The engine delivers granular, structured evaluation metrics (Skills Match, Experience Alignment, and Overall Fit) accompanied by visual skill gap tags and comprehensive recruiter justifications.
+
+---
+
+## 🏗️ System Architecture
+
+The application is structured into modular layers covering presentation, business domain services, data access repositories, and database models.
+
+```mermaid
+flowchart TD
+    Client[Recruiter / Web Dashboard] -->|Uploads Resume + JD| API[FastAPI Gateway]
+    
+    subgraph Backend_Processing [Backend Ingestion & Anonymization]
+        API --> Extractor[Document Text Extractor<br/>pdfplumber / pypdf / python-docx]
+        Extractor --> Redactor[PII Anonymizer Engine<br/>Regex + spaCy NER]
+        Redactor -->|Sanitized Text| GeminiClient[Google Gemini 1.5 Flash Client]
+    end
+
+    subgraph LLM_Intelligence [Google AI Studio API]
+        GeminiClient -->|Structured Prompt| GeminiModel[gemini-1.5-flash Engine]
+        GeminiModel -->|Strict JSON Response| GeminiClient
+    end
+
+    subgraph Data_Persistence [Data Access Layer]
+        GeminiClient --> Service[Screening & Resume Service]
+        Service --> Repositories[Async Repositories]
+        Repositories --> DB[(PostgreSQL / SQLite Database)]
+    end
+
+    DB -->|Persisted Results| API
+    API -->|Real-Time Match JSON| Client
 ```
-smart_resume_screener/
-├── docker-compose.yml              # PostgreSQL + FastAPI container orchestration
-├── .gitignore
-├── README.md
-└── backend/
-    ├── Dockerfile
-    ├── requirements.txt            # Python dependencies
-    ├── .env.example                # Environment variables template
-    ├── .env                        # Local active environment configuration
-    ├── alembic.ini                 # Migration tool configuration
-    ├── alembic/                    # Database migrations
-    │   ├── env.py
-    │   ├── script.py.mako
-    │   └── versions/
-    └── app/
-        ├── main.py                 # Application factory & lifespan
-        ├── core/                   # Core configuration & infrastructure
-        │   ├── config.py           # Pydantic Settings & environment loader
-        │   ├── database.py         # Async SQLAlchemy Engine & SessionLocal
-        │   ├── security.py         # Passlib (bcrypt) & JWT helpers
-        │   └── exceptions.py       # Standardized domain HTTP exceptions
-        ├── models/                 # SQLAlchemy ORM Database Models
-        │   ├── __init__.py
-        │   ├── base.py             # Declarative Base & Timestamp mixin
-        │   ├── user.py             # User & UserRole models
-        │   ├── job.py              # JobDescription model
-        │   ├── candidate.py        # Candidate personal & social profile
-        │   ├── resume.py           # Parsed Resume & JSON schema structures
-        │   └── screening_result.py # Match scores & application status
-        ├── schemas/                # Pydantic v2 DTOs (Data Transfer Objects)
-        │   ├── __init__.py
-        │   ├── user.py             # Auth & User schemas
-        │   ├── job.py              # Job creation, update, & response schemas
-        │   ├── candidate.py        # Candidate profile schemas
-        │   ├── resume.py           # Parsed resume structures & upload DTOs
-        │   └── screening_result.py # Screening, ranking, & feedback schemas
-        ├── repositories/           # Data Access Layer (Repository Pattern)
-        │   ├── base.py             # Generic async CRUD operations
-        │   ├── user_repository.py
-        │   ├── job_repository.py
-        │   ├── candidate_repository.py
-        │   ├── resume_repository.py
-        │   └── screening_repository.py
-        ├── services/               # Business Logic Layer
-        │   ├── user_service.py     # Auth, hashing, token issuance
-        │   ├── job_service.py      # Job posting & authorization rules
-        │   └── resume_service.py   # Upload handling, candidate linking, screening
-        └── api/                    # Presentation / Routing Layer
-            ├── deps.py             # Auth & Database dependency injection
-            └── v1/
-                ├── router.py       # Combined API v1 router
-                └── endpoints/
-                    ├── auth.py     # /api/v1/auth (register, login, me)
-                    ├── jobs.py     # /api/v1/jobs (CRUD job descriptions)
-                    ├── resumes.py  # /api/v1/resumes (upload & retrieve)
-                    └── screening.py# /api/v1/screening (screen & rank candidates)
+
+---
+
+## 🚀 Key Features
+
+1. **Multi-Format Text Extraction**: Robust document ingestion supporting PDF (via `pdfplumber` with fallback to `pypdf`), DOCX (`python-docx`), and plain text files.
+2. **Bias-Free PII Anonymization**: Automatic redaction of names, emails, phone numbers, and profile URLs to ensure strictly skill-based, objective evaluations.
+3. **Structured Gemini 1.5 Flash Screening**: Leveraging `response_mime_type="application/json"` to enforce predictable schemas without hallucinations.
+4. **Granular Multi-Dimensional Ratings**: 1 to 10 integer ratings for Skills Match, Experience Relevance, and Overall Role Fit.
+5. **Visual Match Highlights**: Automatic tag classification of `matched_skills` (green badges) and `missing_skills` (red gap badges).
+6. **Executive Recruiter Justifications**: Clear analytical feedback summarizing candidate strengths and potential ramp-up gaps.
+7. **Production-Ready Architecture**: Asynchronous repository pattern, database migrations via Alembic, JWT authentication, and CORS security.
+
+---
+
+## 🤖 Exact Gemini LLM System Prompts
+
+The backend utilizes two specialized prompts targeting `gemini-1.5-flash` with JSON schema enforcement.
+
+### 1. Resume Parsing Prompt (`app/services/parser/llm_parser.py`)
+
+```text
+You are an expert ATS (Applicant Tracking System) and AI Resume Parser.
+Your task is to analyze the provided anonymized resume text and extract all key professional details.
+
+You MUST respond strictly with a valid, parseable JSON object matching this exact JSON schema:
+
+{
+  "summary": "Professional summary or career objective statement",
+  "skills": ["Skill1", "Skill2", "Skill3"],
+  "work_experiences": [
+    {
+      "company": "Company Name or [REDACTED_COMPANY]",
+      "position": "Job Title",
+      "location": "City, Country or Remote (optional)",
+      "start_date": "YYYY-MM or YYYY (optional)",
+      "end_date": "YYYY-MM or Present (optional)",
+      "is_current": true/false,
+      "description": "Overview of duties and impact",
+      "highlights": ["Key achievement 1", "Key achievement 2"],
+      "technologies": ["Tech1", "Tech2"]
+    }
+  ],
+  "education": [
+    {
+      "institution": "University / College name",
+      "degree": "Degree (e.g., Bachelor of Science, Master of Science)",
+      "field_of_study": "Major / Field (e.g., Computer Science)",
+      "start_year": "YYYY (optional)",
+      "end_year": "YYYY (optional)",
+      "grade_gpa": "GPA or grade (optional)"
+    }
+  ],
+  "certifications": [
+    {
+      "name": "Certification Title",
+      "issuer": "Issuing Organization (e.g., AWS, Microsoft, Google)",
+      "issue_date": "YYYY (optional)",
+      "expiry_date": "YYYY (optional)",
+      "credential_id": "Credential ID (optional)"
+    }
+  ],
+  "languages": ["English", "Spanish"],
+  "total_experience_years": 5.5,
+  "parsed_metadata": {
+    "confidence_score": 0.95,
+    "has_clear_dates": true
+  }
+}
+
+CRITICAL RULES:
+1. Return ONLY the JSON object. Do not include introductory text, explanations, or markdown formatting outside the JSON.
+2. The candidate's PII has been deliberately redacted (e.g. [REDACTED_NAME], [REDACTED_EMAIL], [REDACTED_PHONE]) for bias-free blind screening. Do not attempt to guess or hallucinate personal identifying information.
+3. Normalize all skills into distinct, concise technical and domain skill tags (e.g., "Python", "FastAPI", "Kubernetes", "Machine Learning").
+4. Calculate total_experience_years as accurately as possible based on the work experience timeline.
+```
+
+### 2. Candidate Matching & Screening Prompt (`app/services/screening_service.py`)
+
+```text
+You are an expert AI Technical Recruiter and Talent Assessor.
+Compare the following candidate resume with the provided job description and evaluate candidate fit objectively.
+
+Rate candidate fit on a 1-10 scale with clear, analytical justification.
+
+You MUST respond strictly with a valid, parseable JSON object matching this exact JSON schema:
+
+{
+  "skills_match_score": <integer from 1 to 10>,
+  "experience_match_score": <integer from 1 to 10>,
+  "overall_score": <integer from 1 to 10>,
+  "matched_skills": ["Skill1", "Skill2"],
+  "missing_skills": ["Skill3", "Skill4"],
+  "justification": "A detailed paragraph explaining the rating, highlighting candidate strengths, experience relevance, and potential gaps relative to the job requirements."
+}
+
+SCORING GUIDELINES (1 to 10 Scale):
+- 9-10 (Exceptional Match): Exceeds core requirements; strong relevant experience and all critical skills.
+- 7-8 (Strong Match): Meets key requirements; strong skill overlap with minor easily-trained gaps.
+- 5-6 (Moderate Match): Partial skill/experience alignment; meets some requirements but has noticeable gaps.
+- 3-4 (Weak Match): Missing multiple critical skills or lacking required seniority/domain experience.
+- 1-2 (Poor Match): Unrelated background or severe mismatch in technical stack and experience.
+
+CRITICAL RULES:
+1. Return ONLY the valid JSON object without surrounding markdown fences or conversational preambles.
+2. Carefully inspect both required skills and nice-to-have skills against the candidate's skills and work history.
+3. Provide an objective, bias-free justification paragraph explaining exactly why the candidate received the assigned scores.
 ```
 
 ---
 
 ## 🗄️ Database Schema Design
 
-The relational and document hybrid schema connects **Users (Recruiters)**, **Job Descriptions**, **Candidates**, **Parsed Resumes**, and **Screening Results (Match Ratings)**:
+The relational database model connects recruiters, candidates, uploaded resumes, and match results.
 
+```mermaid
+erDiagram
+    USERS ||--o{ JOB_DESCRIPTIONS : creates
+    CANDIDATES ||--o{ RESUMES : owns
+    JOB_DESCRIPTIONS ||--o{ SCREENING_RESULTS : evaluates
+    RESUMES ||--o{ SCREENING_RESULTS : evaluated_in
+
+    USERS {
+        int id PK
+        string email UK
+        string hashed_password
+        string full_name
+        string role
+        string company_name
+        boolean is_active
+        datetime created_at
+    }
+
+    JOB_DESCRIPTIONS {
+        int id PK
+        int user_id FK
+        string title
+        string department
+        string employment_type
+        string experience_level
+        int min_years_experience
+        text description_raw
+        json required_skills
+        json preferred_skills
+        boolean is_active
+        datetime created_at
+    }
+
+    CANDIDATES {
+        int id PK
+        string full_name
+        string email UK
+        string phone
+        string linkedin_url
+        float total_experience_years
+        datetime created_at
+    }
+
+    RESUMES {
+        int id PK
+        int candidate_id FK
+        string file_name
+        string file_path
+        string file_type
+        string parsing_status
+        text raw_text
+        text summary
+        json skills
+        json work_experiences
+        json education
+        json certifications
+        json parsed_metadata
+        datetime created_at
+    }
+
+    SCREENING_RESULTS {
+        int id PK
+        int job_id FK
+        int resume_id FK
+        float match_score
+        float skills_match_score
+        float experience_match_score
+        text analysis_summary
+        json matched_skills
+        json missing_skills
+        json detailed_feedback
+        string status
+        datetime created_at
+    }
 ```
-[ User (Recruiter) ]
-       │ 1:N
-       ▼
-[ JobDescription ] ───┐
-                      │ 1:N
-                      ▼
-[ Candidate ] ──1:N──> [ Resume ] ───1:N───> [ ScreeningResult ] (Ranked Matches)
-```
-
-### 1. `users`
-* `id` (PK, Integer)
-* `email` (String, Unique, Indexed)
-* `hashed_password` (String)
-* `full_name` (String)
-* `role` (Enum: `admin`, `recruiter`, `hiring_manager`)
-* `company_name` (String, Optional)
-* `is_active` (Boolean)
-* `created_at`, `updated_at` (Timestamps)
-
-### 2. `job_descriptions`
-* `id` (PK, Integer)
-* `user_id` (FK -> `users.id`)
-* `title` (String, Indexed)
-* `department` (String)
-* `location` (String)
-* `employment_type` (Enum: `full_time`, `part_time`, `contract`, `internship`, `remote`)
-* `experience_level` (Enum: `entry_level`, `mid_level`, `senior_level`, `lead`, `executive`)
-* `min_years_experience` / `max_years_experience` (Integer)
-* `description_raw` (Text)
-* `responsibilities` (Text)
-* `qualifications` (Text)
-* `required_skills` (JSON array: `["Python", "FastAPI", "PostgreSQL", ...]`)
-* `preferred_skills` (JSON array: `["Docker", "NLP", "LLMs", ...]`)
-* `is_active` (Boolean)
-* `created_at`, `updated_at` (Timestamps)
-
-### 3. `candidates`
-* `id` (PK, Integer)
-* `full_name` (String, Indexed)
-* `email` (String, Unique, Indexed)
-* `phone` (String)
-* `location` (String)
-* `linkedin_url`, `github_url`, `portfolio_url` (String)
-* `total_experience_years` (Float)
-* `created_at`, `updated_at` (Timestamps)
-
-### 4. `resumes`
-* `id` (PK, Integer)
-* `candidate_id` (FK -> `candidates.id`)
-* `file_name` (String)
-* `file_path` (String)
-* `file_type` (String: `pdf`, `docx`, `txt`)
-* `file_size_bytes` (BigInteger)
-* `parsing_status` (Enum: `pending`, `processing`, `completed`, `failed`)
-* `raw_text` (Text, Optional)
-* `summary` (Text, Optional)
-* `skills` (JSON array of parsed skills)
-* `work_experiences` (JSON array of structured work items: company, position, dates, bullets, tech)
-* `education` (JSON array of degrees, institutions, years, GPA)
-* `certifications` (JSON array)
-* `languages` (JSON array)
-* `parsed_metadata` (JSON: model version, token count, extraction metrics)
-* `error_message` (Text, Optional)
-* `created_at`, `updated_at` (Timestamps)
-
-### 5. `screening_results`
-* `id` (PK, Integer)
-* `job_id` (FK -> `job_descriptions.id`)
-* `resume_id` (FK -> `resumes.id`)
-* `match_score` (Float, 0.0 - 100.0, Indexed)
-* `skills_match_score` (Float)
-* `experience_match_score` (Float)
-* `education_match_score` (Float)
-* `analysis_summary` (Text)
-* `matched_skills` (JSON array)
-* `missing_skills` (JSON array)
-* `detailed_feedback` (JSON dictionary)
-* `status` (Enum: `applied`, `screened`, `shortlisted`, `interview`, `rejected`)
-* `notes` (Text, Optional)
-* `created_at`, `updated_at` (Timestamps)
 
 ---
 
-## 🚀 Quick Start Guide
+## ⚙️ Quick Start Installation
 
-### 1. Local Python Setup (Zero Configuration with SQLite)
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/CodingSagnik/smart-resume-screener.git
+cd smart-resume-screener
+```
+
+### 2. Configure Environment Variables
+
+Create your `.env` file in the `backend/` directory:
 
 ```bash
 cd backend
+cp .env.example .env
+```
 
-# 1. Create and activate a virtual environment
+Configure your Google Gemini API key:
+
+```env
+PROJECT_NAME="Smart Resume Screener API"
+DATABASE_URL="sqlite+aiosqlite:///./smart_resume_screener.db"
+SECRET_KEY="your-secret-jwt-key"
+
+LLM_PROVIDER="gemini"
+GEMINI_API_KEY="your-gemini-api-key-here"
+GEMINI_MODEL="gemini-1.5-flash"
+```
+
+### 3. Install Dependencies & Run
+
+```bash
+# Create and activate virtual environment
 python -m venv venv
-# On Windows:
-.\venv\Scripts\activate
-# On Linux/macOS:
-source venv/bin/activate
+source venv/bin/activate  # On Windows: .\venv\Scripts\activate
 
-# 2. Install dependencies
+# Install required packages
 pip install -r requirements.txt
 
-# 3. Start the FastAPI development server
+# Start the application server
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### 2. Docker & PostgreSQL Setup
+---
 
-```bash
-# In the project root:
-docker-compose up --build -d
-```
+## 🖥️ Interactive Web Dashboard & Endpoints
 
-### 3. Interactive UI & Documentation
-Once started, open your browser to:
-- **Frontend AI Screener Dashboard**: [http://localhost:8000/](http://localhost:8000/)
-- **Interactive Swagger UI**: [http://localhost:8000/api/v1/docs](http://localhost:8000/api/v1/docs)
-- **ReDoc Alternative UI**: [http://localhost:8000/api/v1/redoc](http://localhost:8000/api/v1/redoc)
-- **Health Check**: [http://localhost:8000/health](http://localhost:8000/health)
+Once the application is running, access the services in your browser:
+
+* **Interactive Web Dashboard:** [http://localhost:8000/](http://localhost:8000/)
+* **Interactive OpenAPI Swagger Docs:** [http://localhost:8000/api/v1/docs](http://localhost:8000/api/v1/docs)
+* **ReDoc API Reference:** [http://localhost:8000/api/v1/redoc](http://localhost:8000/api/v1/redoc)
+* **System Health Check:** [http://localhost:8000/health](http://localhost:8000/health)
+
+### Primary API Endpoints
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/v1/screening/quick-screen` | 1-Click direct screening (uploads file + JD, executes PII redaction and Gemini matching) |
+| `POST` | `/api/v1/resumes/upload` | Ingests PDF/DOCX/TXT resume and triggers PII anonymization |
+| `POST` | `/api/v1/jobs/` | Creates a new structured job description |
+| `POST` | `/api/v1/screening/jobs/{id}/screen/{resume_id}` | Runs semantic matching evaluation for an existing resume |
+| `GET` | `/api/v1/screening/jobs/{id}/candidates` | Returns ranked screening evaluations sorted by score |
 
 ---
 
-## 💻 Frontend Dashboard Highlights
+## 📄 License
 
-The frontend (`frontend/index.html`, `frontend/css/style.css`, `frontend/js/app.js`) features:
-1. **Interactive Job & Resume Form**: Paste job description, drag & drop resumes (PDF/TXT/DOCX), with 1-click role presets ("Senior Python", "React Architect", "AI Engineer") and sample resume generator.
-2. **Smooth Multi-Step Loader**: Visual progress indicator reflecting text extraction, bias-free PII redaction, and Gemini 1.5 Flash evaluation.
-3. **Animated Visual Scores**: Circular radial fit gauge (1-10 / 0-100%) and linear bars for Skills & Experience ratings.
-4. **Match Highlights**:
-   - `matched_skills` displayed as vibrant green checkmark badges (`+`).
-   - `missing_skills` displayed as red/rose warning badges (`-`).
-5. **AI Recruiter Justification**: Clear analytical paragraph explaining candidate evaluation and decision.
-6. **Candidate Pipeline Table**: Track shortlisted vs screened candidates with exportable JSON reports.
+This project is licensed under the MIT License. Developed with care by Sagnik Ray.
