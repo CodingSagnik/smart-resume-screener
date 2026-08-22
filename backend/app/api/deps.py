@@ -11,6 +11,10 @@ from app.models.user import User, UserRole
 from app.repositories.user_repository import user_repository
 from app.schemas.user import TokenPayload
 
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl=f"{settings.API_V1_STR}/auth/login"
+)
+
 oauth2_scheme_optional = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/auth/login",
     auto_error=False,

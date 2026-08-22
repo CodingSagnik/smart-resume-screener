@@ -2,6 +2,8 @@ from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from app.models.job import JobDescription
+from app.models.resume import Resume
 from app.models.screening_result import ScreeningResult, ScreeningStatus
 from app.schemas.screening_result import ScreeningResultCreate, ScreeningResultUpdate
 from app.repositories.base import BaseRepository
@@ -13,11 +15,27 @@ class ScreeningRepository(
     def __init__(self):
         super().__init__(ScreeningResult)
 
+    async def get(self, db: AsyncSession, id: int) -> Optional[ScreeningResult]:
+        result = await db.execute(
+            select(ScreeningResult)
+            .options(
+                selectinload(ScreeningResult.job),
+                selectinload(ScreeningResult.resume).selectinload(Resume.candidate),
+            )
+            .where(ScreeningResult.id == id)
+        )
+        return result.scalars().first()
+
     async def get_by_job_and_resume(
         self, db: AsyncSession, *, job_id: int, resume_id: int
     ) -> Optional[ScreeningResult]:
         result = await db.execute(
-            select(ScreeningResult).where(
+            select(ScreeningResult)
+            .options(
+                selectinload(ScreeningResult.job),
+                selectinload(ScreeningResult.resume).selectinload(Resume.candidate),
+            )
+            .where(
                 ScreeningResult.job_id == job_id,
                 ScreeningResult.resume_id == resume_id,
             )

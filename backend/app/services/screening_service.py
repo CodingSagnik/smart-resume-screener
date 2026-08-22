@@ -194,8 +194,13 @@ Certifications:
         result_dict = json.loads(clean_text)
         return LLMScreeningEvaluation.model_validate(result_dict)
     except Exception as e:
-        logger.error(f"Gemini API screening evaluation failed: {e}")
-        raise ValueError(f"Gemini screening evaluation failed: {str(e)}")
+        logger.warning(f"Gemini API screening evaluation encountered error: {e}. Running fallback heuristic evaluation.")
+        raw_output = _dev_mock_screening(
+            resume_skills=parsed_resume_dict.get("skills", []),
+            job_description_raw=job_description_raw,
+            required_skills=req_skills,
+        )
+        return LLMScreeningEvaluation.model_validate(raw_output)
 
 
 class ScreeningService:

@@ -213,13 +213,29 @@ async def parse_resume_with_llm(anonymized_text: str) -> ResumeParsedData:
 
     # Check if provider keys are configured
     if provider == "gemini" and settings.GEMINI_API_KEY:
-        raw_data = await _parse_with_gemini(anonymized_text)
+        try:
+            raw_data = await _parse_with_gemini(anonymized_text)
+        except Exception as e:
+            logger.warning(f"Gemini API error ({e}). Falling back to heuristic parser for continuity.")
+            raw_data = _dev_mock_parser(anonymized_text)
     elif provider == "openai" and settings.OPENAI_API_KEY:
-        raw_data = await _parse_with_openai(anonymized_text)
+        try:
+            raw_data = await _parse_with_openai(anonymized_text)
+        except Exception as e:
+            logger.warning(f"OpenAI API error ({e}). Falling back to heuristic parser for continuity.")
+            raw_data = _dev_mock_parser(anonymized_text)
     elif settings.GEMINI_API_KEY:
-        raw_data = await _parse_with_gemini(anonymized_text)
+        try:
+            raw_data = await _parse_with_gemini(anonymized_text)
+        except Exception as e:
+            logger.warning(f"Gemini API error ({e}). Falling back to heuristic parser.")
+            raw_data = _dev_mock_parser(anonymized_text)
     elif settings.OPENAI_API_KEY:
-        raw_data = await _parse_with_openai(anonymized_text)
+        try:
+            raw_data = await _parse_with_openai(anonymized_text)
+        except Exception as e:
+            logger.warning(f"OpenAI API error ({e}). Falling back to heuristic parser.")
+            raw_data = _dev_mock_parser(anonymized_text)
     else:
         # Development fallback mode
         raw_data = _dev_mock_parser(anonymized_text)
