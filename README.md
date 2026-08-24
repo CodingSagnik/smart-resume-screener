@@ -13,7 +13,7 @@
 
 ---
 
-## 📌 Executive Overview
+## Executive Overview
 
 The **Smart Resume Screener** is an intelligent, bias-free applicant tracking and candidate screening system. It automates the extraction, redaction, and semantic matching of resumes against complex job descriptions using **FastAPI**, **SQLAlchemy 2.0 Async**, and **High-Speed LLMs (Groq/OpenAI compatible)**.
 
@@ -21,7 +21,7 @@ To eliminate unconscious hiring bias, the platform implements an automated Perso
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 The application is structured into modular layers covering presentation, business domain services, data access repositories, and database models.
 
@@ -52,7 +52,7 @@ flowchart TD
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
 1. **Multi-Format Text Extraction**: Robust document ingestion supporting PDF (via `pdfplumber` with fallback to `pypdf`), DOCX (`python-docx`), and plain text files.
 2. **Bias-Free PII Anonymization**: Automatic redaction of names, emails, phone numbers, and profile URLs to ensure strictly skill-based, objective evaluations.
@@ -64,7 +64,7 @@ flowchart TD
 
 ---
 
-## 🤖 Exact AI System Prompts
+## Exact AI System Prompts
 
 The backend utilizes two specialized prompts targeting high-speed LLMs (e.g., Groq/Llama-3) with JSON schema enforcement.
 
@@ -175,7 +175,7 @@ CRITICAL RULES:
 
 ---
 
-## 🗄️ Database Schema Design
+## Database Schema Design
 
 The relational database model connects recruiters, candidates, uploaded resumes, and match results.
 
@@ -257,7 +257,7 @@ erDiagram
 
 ---
 
-## ⚙️ Quick Start Installation
+## Quick Start Installation
 
 ### 1. Clone the Repository
 
@@ -304,7 +304,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 ---
 
-## 🖥️ Interactive Web Dashboard & Endpoints
+## Interactive Web Dashboard & Endpoints
 
 Once the application is running, access the services in your browser:
 
@@ -325,6 +325,6 @@ Once the application is running, access the services in your browser:
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License. Developed with care by Sagnik Ray.
