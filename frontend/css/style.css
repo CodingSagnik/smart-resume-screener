@@ -32,9 +32,15 @@
 
   /* Typography Colors */
   --text-primary: #FBF9F3;
-  --text-secondary: #A8A69E;
-  --text-muted: #6B6A65;
-  --text-dim: #464541;
+  --text-secondary: #B4B8B4;
+  --text-muted: #9BA19B;
+  --text-dim: #8A8F8A;
+
+  /* Ink aliases for compatibility */
+  --ink-primary: #FBF9F3;
+  --ink-secondary: #B4B8B4;
+  --ink-muted: #9BA19B;
+  --ink-dim: #8A8F8A;
 
   /* Cream for body copy */
   --cream: #FBF9F3;
@@ -1252,8 +1258,8 @@ body {
 
 .sub-score-hint {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
-  color: var(--text-dim);
+  font-size: 0.72rem;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
