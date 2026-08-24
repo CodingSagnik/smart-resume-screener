@@ -1003,6 +1003,27 @@ body {
   border-radius: 50%;
 }
 
+.status-rejected {
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  color: var(--rose-red);
+}
+
+.status-rejected .dot {
+  width: 6px;
+  height: 6px;
+  background: var(--rose-red);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--rose-red);
+}
+
+/* Justification bullet-point marker */
+.bullet-marker {
+  color: var(--accent-primary);
+  font-weight: 700;
+  margin-right: 0.25rem;
+}
+
 /* Scores Grid */
 .scores-grid {
   display: grid;

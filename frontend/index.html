@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Resume Screener | AI-Powered Blind Candidate Screening</title>
-  <meta name="description" content="Production-ready Smart Resume Screener powered by Google Gemini 1.5 Flash and FastAPI. Bias-free semantic resume parsing and candidate ranking.">
+  <meta name="description" content="Production-ready Smart Resume Screener powered by a flexible AI Matching Engine and FastAPI. Bias-free semantic resume parsing and candidate ranking.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -83,7 +83,7 @@
           Bias-Free Blind Screening Engine
         </div>
         <h1 class="hero-title">AI Semantic Resume Screener</h1>
-        <p class="hero-subtitle">Upload candidate resumes and match them against your job descriptions. Our AI anonymizes PII and performs deep semantic scoring using Google Gemini.</p>
+        <p class="hero-subtitle">Upload candidate resumes and match them against your job descriptions. Our AI anonymizes PII and performs deep semantic scoring using a state-of-the-art LLM evaluation engine.</p>
       </div>
 
       <div class="screener-grid">
@@ -134,7 +134,7 @@
               <label for="job-title" class="form-label">
                 Target Role Title <span class="required">*</span>
               </label>
-              <input type="text" id="job-title" class="form-input" placeholder="e.g. Senior Backend Engineer" required value="Senior Python & FastAPI Engineer">
+              <input type="text" id="job-title" class="form-input" placeholder="e.g. Senior Backend Engineer" required>
             </div>
 
             <!-- Job Description -->
@@ -152,7 +152,7 @@
             <div class="form-row-2">
               <div class="form-group">
                 <label for="candidate-name" class="form-label">Candidate Name</label>
-                <input type="text" id="candidate-name" class="form-input" placeholder="e.g. Alex Morgan" value="Alex Morgan">
+                <input type="text" id="candidate-name" class="form-input" placeholder="e.g. Alex Morgan">
               </div>
               <div class="form-group">
                 <label for="candidate-email" class="form-label">Candidate Email</label>
@@ -166,9 +166,6 @@
                 <label class="form-label">
                   Candidate Resume (PDF, TXT, DOCX) <span class="required">*</span>
                 </label>
-                <button type="button" id="sample-resume-btn" class="text-link accent-link">
-                  📄 Insert Sample Resume
-                </button>
               </div>
 
               <div id="dropzone" class="dropzone">
@@ -216,7 +213,7 @@
                   <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
                 </svg>
               </span>
-              <span class="btn-text">Run Gemini AI Screening</span>
+              <span class="btn-text">Run AI Matching Engine</span>
             </button>
           </form>
         </div>
@@ -238,7 +235,7 @@
             </div>
 
             <div id="result-status-badge" class="status-badge-container hidden">
-              <span class="status-pill status-shortlisted">SHORTLISTED</span>
+              <span id="panel-status-pill" class="status-pill status-shortlisted">SHORTLISTED</span>
             </div>
           </div>
 
@@ -254,7 +251,7 @@
               </svg>
             </div>
             <h3 class="state-title">Awaiting Candidate Evaluation</h3>
-            <p class="state-desc">Input a job description and attach a candidate's resume on the left. The system will redact PII and evaluate fit with Google Gemini.</p>
+            <p class="state-desc">Input a job description and attach a candidate's resume on the left. The system will redact PII and evaluate fit with the AI Matching Engine.</p>
             <div class="feature-bullets">
               <div class="bullet-item">
                 <span class="bullet-dot green"></span>
@@ -281,7 +278,7 @@
                 </svg>
               </div>
             </div>
-            <h3 class="state-title">Analyzing Resume with Gemini AI</h3>
+            <h3 class="state-title">Analyzing Resume with AI</h3>
             <p id="loading-step-text" class="state-desc">Extracting document text and redacting contact PII...</p>
 
             <div class="loading-steps-list">
@@ -295,7 +292,7 @@
               </div>
               <div class="step-row" id="step-3">
                 <div class="step-indicator"></div>
-                <span>3. Calling Google Gemini 1.5 Flash API</span>
+                <span>3. Calling AI Evaluation API</span>
               </div>
               <div class="step-row" id="step-4">
                 <div class="step-indicator"></div>

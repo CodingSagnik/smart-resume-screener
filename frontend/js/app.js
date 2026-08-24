@@ -1,6 +1,6 @@
 /**
  * Smart Resume Screener - Frontend Application Logic
- * Integrates with FastAPI & Google Gemini 1.5 Flash backend
+ * Integrates with FastAPI backend and flexible AI LLM provider (OpenRouter / OpenAI / Gemini)
  */
 
 // API Configuration
@@ -93,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initPresets();
   initDropzone();
   initFormSubmission();
-  initSampleResumeButton();
   initActionButtons();
   loadHistoryFromStorage();
 });
@@ -164,10 +163,8 @@ function initPresets() {
     jobDescTextarea.focus();
   });
 
-  // Set default initial preset
-  if (!jobDescTextarea.value) {
-    jobDescTextarea.value = PRESETS.backend.description;
-  }
+  // Do NOT auto-populate fields on boot; the user should start with a clean form.
+  // Preset values are loaded on demand via the 'Load Sample Role' dropdown.
 }
 
 /* ==========================================================================
@@ -338,7 +335,7 @@ function animateLoadingSteps() {
   const steps = [
     { id: 'step-1', text: 'Extracting document text (pdfplumber/pypdf)...' },
     { id: 'step-2', text: 'Redacting contact PII (Name, Email, Phone) for bias-free screening...' },
-    { id: 'step-3', text: 'Prompting Google Gemini 1.5 Flash structured AI model...' },
+    { id: 'step-3', text: 'Calling AI Evaluation API...' },
     { id: 'step-4', text: 'Synthesizing match ratings & justification...' },
   ];
 
@@ -390,8 +387,35 @@ function renderScreeningResults(data, candidateName, jobTitle) {
   overallScore = Math.min(Math.max(overallScore, 1), 10);
 
   const isShortlisted = overallScore >= 7;
-  decisionBadge.className = `decision-pill ${isShortlisted ? 'status-shortlisted' : 'status-review'}`;
-  decisionText.textContent = isShortlisted ? 'Shortlisted Candidate' : 'Requires Review';
+  const isReview = overallScore >= 4 && overallScore < 7;
+
+  if (isShortlisted) {
+    decisionBadge.className = 'decision-pill status-shortlisted';
+    decisionText.textContent = 'Shortlisted Candidate';
+  } else if (isReview) {
+    decisionBadge.className = 'decision-pill status-review';
+    decisionText.textContent = 'Requires Review';
+  } else {
+    decisionBadge.className = 'decision-pill status-rejected';
+    decisionText.textContent = 'Rejected';
+  }
+
+  // Update panel header status pill
+  const panelPill = document.getElementById('panel-status-pill');
+  if (panelPill) {
+    const panelBadgeContainer = document.getElementById('result-status-badge');
+    if (isShortlisted) {
+      panelPill.className = 'status-pill status-shortlisted';
+      panelPill.textContent = 'SHORTLISTED';
+    } else if (isReview) {
+      panelPill.className = 'status-pill status-review';
+      panelPill.textContent = 'REQUIRES REVIEW';
+    } else {
+      panelPill.className = 'status-pill status-rejected';
+      panelPill.textContent = 'REJECTED';
+    }
+    panelBadgeContainer.classList.remove('hidden');
+  }
 
   // 2. Overall Radial Score
   const scoreOverallNum = document.getElementById('score-overall-num');
@@ -436,9 +460,15 @@ function renderScreeningResults(data, candidateName, jobTitle) {
   renderSkillBadges(data.matched_skills, 'matched');
   renderSkillBadges(data.missing_skills, 'missing');
 
-  // 5. Analysis Justification
+  // 5. Analysis Justification (render newlines as formatted paragraphs)
   const justificationText = data.analysis_summary || data.justification || data.detailed_feedback?.raw_justification || 'No justification provided.';
-  document.getElementById('res-justification-text').textContent = justificationText;
+  const justElem = document.getElementById('res-justification-text');
+  // Convert newlines to <br> and bullet markers to styled bullets
+  const formatted = escapeHtml(justificationText)
+    .replace(/\n\n+/g, '</p><p class="justification-paragraph">')
+    .replace(/\n/g, '<br>')
+    .replace(/^([-*•]\s+)/gm, '<span class="bullet-marker">&#8226;</span> ');
+  justElem.innerHTML = formatted;
 }
 
 /**
@@ -550,13 +580,19 @@ function initActionButtons() {
    9. PIPELINE TABLE & LOCAL HISTORY
    ========================================================================== */
 function saveToPipelineHistory(result, candidateName, jobTitle) {
+  const overallScore = result.detailed_feedback?.overall_score_1_to_10 || (result.match_score > 10 ? Math.round(result.match_score / 10) : result.match_score) || 0;
+
+  const statusStr = overallScore >= 7 ? 'SHORTLISTED' : overallScore >= 4 ? 'REQUIRES REVIEW' : 'REJECTED';
+  const statusCls = overallScore >= 7 ? 'status-shortlisted' : overallScore >= 4 ? 'status-review' : 'status-rejected';
+
   const item = {
     id: result.id || Date.now(),
     candidateName: candidateName || 'Candidate',
     jobTitle: jobTitle || 'Target Role',
-    overallScore: result.detailed_feedback?.overall_score_1_to_10 || (result.match_score > 10 ? Math.round(result.match_score / 10) : result.match_score) || 8,
-    skillsScore: result.skills_match_score || 8,
-    status: (result.match_score >= 70 || result.status === 'shortlisted') ? 'SHORTLISTED' : 'SCREENED',
+    overallScore,
+    skillsScore: result.skills_match_score || 0,
+    status: statusStr,
+    statusCls,
     date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   };
 
@@ -588,7 +624,8 @@ function renderPipelineTable() {
   tbody.innerHTML = '';
   screeningHistory.forEach(item => {
     const tr = document.createElement('tr');
-    const isShort = item.overallScore >= 7;
+    const scoreColor = item.overallScore >= 7 ? 'var(--emerald-green)' : item.overallScore >= 4 ? 'var(--amber-gold)' : 'var(--rose-red)';
+    const pillCls = item.statusCls || (item.overallScore >= 7 ? 'status-shortlisted' : item.overallScore >= 4 ? 'status-review' : 'status-rejected');
 
     tr.innerHTML = `
       <td>
@@ -596,13 +633,13 @@ function renderPipelineTable() {
       </td>
       <td>${escapeHtml(item.jobTitle)}</td>
       <td>
-        <span style="font-family: var(--font-mono); font-weight: 700; color: ${isShort ? 'var(--emerald-green)' : 'var(--amber-gold)'};">
+        <span style="font-family: var(--font-mono); font-weight: 700; color: ${scoreColor};">
           ${item.overallScore} / 10
         </span>
       </td>
       <td>${item.skillsScore} / 10</td>
       <td>
-        <span class="status-pill ${isShort ? 'status-shortlisted' : 'status-review'}" style="font-size: 0.72rem;">
+        <span class="status-pill ${pillCls}" style="font-size: 0.72rem;">
           ${item.status}
         </span>
       </td>
