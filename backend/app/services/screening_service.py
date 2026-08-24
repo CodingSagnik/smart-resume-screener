@@ -37,20 +37,16 @@ You MUST respond strictly with a valid, parseable JSON object matching this exac
 }
 
 JUSTIFICATION FORMAT REQUIREMENTS:
-Format the justification strictly using the following layout. You MUST include a double line break (\\n\\n) between each section to create clear visual gaps. Use standard hyphens for bullet points. Do not use markdown bolding for the headers.
+Format the justification strictly using the following layout. You MUST use double line breaks (\\n\\n) between sections (Strengths, Gaps & Concerns, Overall Verdict) to create clear visual gaps. Use standard hyphens for bullet points. Do not use markdown bolding (no ** or __) for the headers.
 
-Strengths:
-- [Point 1]
-- [Point 2]
+Here is an exact example of a correctly formatted "justification" value:
 
-Gaps & Concerns:
-- [Point 1]
-- [Point 2]
+"Strengths:\\n- Strong Python and FastAPI experience with 5+ years of backend development.\\n- Demonstrated ability to design PostgreSQL schemas and optimize queries.\\n\\nGaps & Concerns:\\n- No direct experience with Kubernetes or container orchestration at scale.\\n- Missing exposure to message queues such as RabbitMQ or Kafka.\\n\\nOverall Verdict:\\nThe candidate is a strong match for the core backend role but would need onboarding for the infrastructure and DevOps aspects of the position."
 
-Overall Verdict:
-[1 to 2 sentences summarizing the final verdict.]
-
-The "justification" value in the JSON must be a single string where each line break is represented as \\n and each blank line between sections is represented as \\n\\n.
+Key formatting rules for the justification string:
+- Use \\n (single newline) between each bullet point within a section.
+- Use \\n\\n (double newline) between sections to produce a visible blank line.
+- Section headers (Strengths:, Gaps & Concerns:, Overall Verdict:) must appear as plain text, not bolded.
 
 SCORING GUIDELINES (1 to 10 Scale):
 - 9-10 (Exceptional Match): Exceeds core requirements; strong relevant experience and all critical skills.

@@ -95,6 +95,10 @@ document.addEventListener('DOMContentLoaded', () => {
   initFormSubmission();
   initActionButtons();
   loadHistoryFromStorage();
+
+  // Ensure the decision badge is hidden on initial page load
+  const badge = document.getElementById('decision-badge');
+  if (badge) badge.style.display = 'none';
 });
 
 /* ==========================================================================
@@ -399,6 +403,8 @@ function renderScreeningResults(data, candidateName, jobTitle) {
     decisionBadge.className = 'decision-pill status-rejected';
     decisionText.textContent = 'Rejected';
   }
+  // Make the badge visible now that it has a status class
+  decisionBadge.style.display = 'inline-flex';
 
   // 2. Overall Radial Score
   const scoreOverallNum = document.getElementById('score-overall-num');
@@ -443,10 +449,12 @@ function renderScreeningResults(data, candidateName, jobTitle) {
   renderSkillBadges(data.matched_skills, 'matched');
   renderSkillBadges(data.missing_skills, 'missing');
 
-  // 5. Analysis Justification: convert \n to <br> for clean line-break rendering
+  // 5. Analysis Justification: convert \n\n to <br><br> and \n to <br>
   const justificationText = data.analysis_summary || data.justification || data.detailed_feedback?.raw_justification || 'No justification provided.';
   const justElem = document.getElementById('res-justification-text');
-  justElem.innerHTML = justificationText.replace(/\n/g, '<br>');
+  justElem.innerHTML = justificationText
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>');
 }
 
 /**
@@ -540,6 +548,9 @@ function initActionButtons() {
   const screenAnotherBtn = document.getElementById('screen-another-btn');
   screenAnotherBtn.addEventListener('click', () => {
     setScreeningState('empty');
+    // Re-hide the decision badge when resetting
+    const badge = document.getElementById('decision-badge');
+    if (badge) badge.style.display = 'none';
     window.resetFileInput();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
