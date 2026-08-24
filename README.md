@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg)](https://fastapi.tiangolo.com)
-[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-1.5%20Flash-4285F4.svg)](https://ai.google.dev/)
+[![Groq Fast AI](https://img.shields.io/badge/Groq-Llama%203-f39c12.svg)](https://groq.com/)
 [![SQLAlchemy 2.0](https://img.shields.io/badge/SQLAlchemy-2.0%20Async-D71F00.svg)](https://www.sqlalchemy.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -15,7 +15,7 @@
 
 ## 📌 Executive Overview
 
-The **Smart Resume Screener** is an intelligent, bias-free applicant tracking and candidate screening system. It automates the extraction, redaction, and semantic matching of resumes against complex job descriptions using **FastAPI**, **SQLAlchemy 2.0 Async**, and **Google Gemini 1.5 Flash**.
+The **Smart Resume Screener** is an intelligent, bias-free applicant tracking and candidate screening system. It automates the extraction, redaction, and semantic matching of resumes against complex job descriptions using **FastAPI**, **SQLAlchemy 2.0 Async**, and **High-Speed LLMs (Groq/OpenAI compatible)**.
 
 To eliminate unconscious hiring bias, the platform implements an automated Personally Identifiable Information (PII) redaction layer (removing names, email addresses, phone numbers, and portfolio links) before transmitting data to the language model. The engine delivers granular, structured evaluation metrics (Skills Match, Experience Alignment, and Overall Fit) accompanied by visual skill gap tags and comprehensive recruiter justifications.
 
@@ -32,16 +32,16 @@ flowchart TD
     subgraph Backend_Processing [Backend Ingestion & Anonymization]
         API --> Extractor[Document Text Extractor<br/>pdfplumber / pypdf / python-docx]
         Extractor --> Redactor[PII Anonymizer Engine<br/>Regex + spaCy NER]
-        Redactor -->|Sanitized Text| GeminiClient[Google Gemini 1.5 Flash Client]
+        Redactor -->|Sanitized Text| LLMClient[Groq / External API Client]
     end
 
-    subgraph LLM_Intelligence [Google AI Studio API]
-        GeminiClient -->|Structured Prompt| GeminiModel[gemini-1.5-flash Engine]
-        GeminiModel -->|Strict JSON Response| GeminiClient
+    subgraph LLM_Intelligence [Groq / OpenRouter API]
+        LLMClient -->|Structured Prompt| AIModel[Llama 3 / High-Speed Engine]
+        AIModel -->|Strict JSON Response| LLMClient
     end
 
     subgraph Data_Persistence [Data Access Layer]
-        GeminiClient --> Service[Screening & Resume Service]
+        LLMClient --> Service[Screening & Resume Service]
         Service --> Repositories[Async Repositories]
         Repositories --> DB[(PostgreSQL / SQLite Database)]
     end
@@ -56,7 +56,7 @@ flowchart TD
 
 1. **Multi-Format Text Extraction**: Robust document ingestion supporting PDF (via `pdfplumber` with fallback to `pypdf`), DOCX (`python-docx`), and plain text files.
 2. **Bias-Free PII Anonymization**: Automatic redaction of names, emails, phone numbers, and profile URLs to ensure strictly skill-based, objective evaluations.
-3. **Structured Gemini 1.5 Flash Screening**: Leveraging `response_mime_type="application/json"` to enforce predictable schemas without hallucinations.
+3. **Structured AI Screening (Groq/Llama-3)**: Leveraging `response_mime_type="application/json"` or JSON response formatting to enforce predictable schemas without hallucinations.
 4. **Granular Multi-Dimensional Ratings**: 1 to 10 integer ratings for Skills Match, Experience Relevance, and Overall Role Fit.
 5. **Visual Match Highlights**: Automatic tag classification of `matched_skills` (green badges) and `missing_skills` (red gap badges).
 6. **Executive Recruiter Justifications**: Clear analytical feedback summarizing candidate strengths and potential ramp-up gaps.
@@ -64,9 +64,9 @@ flowchart TD
 
 ---
 
-## 🤖 Exact Gemini LLM System Prompts
+## 🤖 Exact AI System Prompts
 
-The backend utilizes two specialized prompts targeting `gemini-1.5-flash` with JSON schema enforcement.
+The backend utilizes two specialized prompts targeting high-speed LLMs (e.g., Groq/Llama-3) with JSON schema enforcement.
 
 ### 1. Resume Parsing Prompt (`app/services/parser/llm_parser.py`)
 
@@ -275,16 +275,17 @@ cd backend
 cp .env.example .env
 ```
 
-Configure your Google Gemini API key:
+Configure your Groq / LLM API key:
 
 ```env
 PROJECT_NAME="Smart Resume Screener API"
 DATABASE_URL="sqlite+aiosqlite:///./smart_resume_screener.db"
 SECRET_KEY="your-secret-jwt-key"
 
-LLM_PROVIDER="gemini"
-GEMINI_API_KEY="your-gemini-api-key-here"
-GEMINI_MODEL="gemini-1.5-flash"
+LLM_PROVIDER="openai"
+OPENAI_API_KEY="gsk_your-groq-api-key-here"
+OPENAI_MODEL="openai/gpt-oss-120b"
+OPENAI_BASE_URL="https://api.groq.com/openai/v1"
 ```
 
 ### 3. Install Dependencies & Run
@@ -316,7 +317,7 @@ Once the application is running, access the services in your browser:
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `POST` | `/api/v1/screening/quick-screen` | 1-Click direct screening (uploads file + JD, executes PII redaction and Gemini matching) |
+| `POST` | `/api/v1/screening/quick-screen` | 1-Click direct screening (uploads file + JD, executes PII redaction and AI semantic matching) |
 | `POST` | `/api/v1/resumes/upload` | Ingests PDF/DOCX/TXT resume and triggers PII anonymization |
 | `POST` | `/api/v1/jobs/` | Creates a new structured job description |
 | `POST` | `/api/v1/screening/jobs/{id}/screen/{resume_id}` | Runs semantic matching evaluation for an existing resume |
