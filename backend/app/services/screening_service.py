@@ -33,13 +33,24 @@ You MUST respond strictly with a valid, parseable JSON object matching this exac
   "overall_score": <integer from 1 to 10>,
   "matched_skills": ["Skill1", "Skill2"],
   "missing_skills": ["Skill3", "Skill4"],
-  "justification": "A structured assessment with distinct sections as shown below."
+  "justification": "<see strict format below>"
 }
 
 JUSTIFICATION FORMAT REQUIREMENTS:
-The "justification" field MUST use the following structure with newline characters (\\n) to separate sections:
+Format the justification strictly using the following layout. You MUST include a double line break (\\n\\n) between each section to create clear visual gaps. Use standard hyphens for bullet points. Do not use markdown bolding for the headers.
 
-Strengths:\\n- [Bullet point 1 about a candidate strength]\\n- [Bullet point 2 about a candidate strength]\\n\\nGaps & Concerns:\\n- [Bullet point 1 about a gap or concern]\\n- [Bullet point 2 about a gap or concern]\\n\\nOverall Verdict:\\n[One or two sentence summary explaining the overall score and suitability for the role.]
+Strengths:
+- [Point 1]
+- [Point 2]
+
+Gaps & Concerns:
+- [Point 1]
+- [Point 2]
+
+Overall Verdict:
+[1 to 2 sentences summarizing the final verdict.]
+
+The "justification" value in the JSON must be a single string where each line break is represented as \\n and each blank line between sections is represented as \\n\\n.
 
 SCORING GUIDELINES (1 to 10 Scale):
 - 9-10 (Exceptional Match): Exceeds core requirements; strong relevant experience and all critical skills.
@@ -51,7 +62,7 @@ SCORING GUIDELINES (1 to 10 Scale):
 CRITICAL RULES:
 1. Return ONLY the valid JSON object without surrounding markdown fences or conversational preambles.
 2. Carefully inspect both required skills and nice-to-have skills against the candidate's skills and work history.
-3. Use newline characters (\\n) inside the justification string to separate bullet points and sections.
+3. The justification MUST follow the three-section format exactly: Strengths, Gaps & Concerns, Overall Verdict.
 4. Provide an objective, bias-free justification explaining exactly why the candidate received the assigned scores.
 """
 

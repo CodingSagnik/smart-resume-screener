@@ -400,23 +400,6 @@ function renderScreeningResults(data, candidateName, jobTitle) {
     decisionText.textContent = 'Rejected';
   }
 
-  // Update panel header status pill
-  const panelPill = document.getElementById('panel-status-pill');
-  if (panelPill) {
-    const panelBadgeContainer = document.getElementById('result-status-badge');
-    if (isShortlisted) {
-      panelPill.className = 'status-pill status-shortlisted';
-      panelPill.textContent = 'SHORTLISTED';
-    } else if (isReview) {
-      panelPill.className = 'status-pill status-review';
-      panelPill.textContent = 'REQUIRES REVIEW';
-    } else {
-      panelPill.className = 'status-pill status-rejected';
-      panelPill.textContent = 'REJECTED';
-    }
-    panelBadgeContainer.classList.remove('hidden');
-  }
-
   // 2. Overall Radial Score
   const scoreOverallNum = document.getElementById('score-overall-num');
   const radialBar = document.getElementById('radial-progress-bar');
@@ -460,15 +443,10 @@ function renderScreeningResults(data, candidateName, jobTitle) {
   renderSkillBadges(data.matched_skills, 'matched');
   renderSkillBadges(data.missing_skills, 'missing');
 
-  // 5. Analysis Justification (render newlines as formatted paragraphs)
+  // 5. Analysis Justification: convert \n to <br> for clean line-break rendering
   const justificationText = data.analysis_summary || data.justification || data.detailed_feedback?.raw_justification || 'No justification provided.';
   const justElem = document.getElementById('res-justification-text');
-  // Convert newlines to <br> and bullet markers to styled bullets
-  const formatted = escapeHtml(justificationText)
-    .replace(/\n\n+/g, '</p><p class="justification-paragraph">')
-    .replace(/\n/g, '<br>')
-    .replace(/^([-*•]\s+)/gm, '<span class="bullet-marker">&#8226;</span> ');
-  justElem.innerHTML = formatted;
+  justElem.innerHTML = justificationText.replace(/\n/g, '<br>');
 }
 
 /**
