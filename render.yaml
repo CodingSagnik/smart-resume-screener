@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: smart-resume-screener
+    runtime: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:///./smart_resume_screener.db
+      - key: LLM_PROVIDER
+        value: openai
+      - key: OPENAI_MODEL
+        value: openrouter/free
+      - key: OPENAI_BASE_URL
+        value: https://openrouter.ai/api/v1
+      - key: OPENAI_API_KEY
+        sync: false
