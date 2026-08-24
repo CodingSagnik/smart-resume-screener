@@ -7,7 +7,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **Author:** Sagnik Ray  
-**Repository:** [https://github.com/CodingSagnik/smart-resume-screener.git](https://github.com/CodingSagnik/smart-resume-screener.git)
+**Repository:** [https://github.com/CodingSagnik/smart-resume-screener.git](https://github.com/CodingSagnik/smart-resume-screener.git)  
+**Live Application:** [https://smart-resume-screener-o8gw.onrender.com/](https://smart-resume-screener-o8gw.onrender.com/)  
+**Demo Video (2-3 Min):** [https://youtu.be/CVdHs2RPeuk](https://youtu.be/CVdHs2RPeuk)  
 
 ---
 
@@ -140,8 +142,22 @@ You MUST respond strictly with a valid, parseable JSON object matching this exac
   "overall_score": <integer from 1 to 10>,
   "matched_skills": ["Skill1", "Skill2"],
   "missing_skills": ["Skill3", "Skill4"],
-  "justification": "A detailed paragraph explaining the rating, highlighting candidate strengths, experience relevance, and potential gaps relative to the job requirements."
+  "justification": "<see strict format below>"
 }
+
+JUSTIFICATION FORMAT REQUIREMENTS:
+Format the justification strictly using the following layout. You MUST use double line breaks (\n\n) between sections (Strengths, Gaps & Concerns, Overall Verdict) to create clear visual gaps. Use standard hyphens for bullet points. Do not use markdown bolding (no ** or __) for the headers.
+
+Strengths:
+- [Point 1]
+- [Point 2]
+
+Gaps & Concerns:
+- [Point 1]
+- [Point 2]
+
+Overall Verdict:
+[1 to 2 sentences summarizing the final verdict.]
 
 SCORING GUIDELINES (1 to 10 Scale):
 - 9-10 (Exceptional Match): Exceeds core requirements; strong relevant experience and all critical skills.
@@ -153,7 +169,8 @@ SCORING GUIDELINES (1 to 10 Scale):
 CRITICAL RULES:
 1. Return ONLY the valid JSON object without surrounding markdown fences or conversational preambles.
 2. Carefully inspect both required skills and nice-to-have skills against the candidate's skills and work history.
-3. Provide an objective, bias-free justification paragraph explaining exactly why the candidate received the assigned scores.
+3. The justification MUST follow the three-section format exactly: Strengths, Gaps & Concerns, Overall Verdict.
+4. Provide an objective, bias-free justification explaining exactly why the candidate received the assigned scores.
 ```
 
 ---
